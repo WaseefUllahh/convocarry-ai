@@ -1,7 +1,7 @@
 import { db, LocalCarryCard, LocalCarryCardVersion } from './db';
 import { ConversationNode } from '@convocarry/shared-types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.convocarry.ai/api/v1';
 
 export class SyncError extends Error {
   constructor(message: string) {

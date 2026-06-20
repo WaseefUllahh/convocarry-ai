@@ -57,7 +57,7 @@ const Support: React.FC = () => {
       <div className="container" style={{ maxWidth: '800px', paddingBottom: '80px' }}>
         <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>Support & Troubleshooting</h1>
         <p style={{ textAlign: 'center', marginBottom: '48px' }}>
-          During beta, we aim to respond to support requests within 24–48 business hours. You can also reach us directly at <a href="mailto:support@convocarry.ai">support@convocarry.ai</a>.
+          During beta, we aim to respond to support requests within 24–48 business hours. You can also reach us directly at <a href="mailto:waseefullah675@gmail.com">waseefullah675@gmail.com</a>.
         </p>
 
         <div className="card">
@@ -77,7 +77,7 @@ const Support: React.FC = () => {
 
           {(!import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL === 'DISABLED') ? (
             <div style={{ padding: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              In-app support requests are disabled in this beta. Please email <a href="mailto:support@convocarry.ai">support@convocarry.ai</a>.
+              In-app support requests are disabled in this beta. Please email <a href="mailto:waseefullah675@gmail.com">waseefullah675@gmail.com</a>.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>

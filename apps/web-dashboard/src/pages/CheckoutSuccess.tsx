@@ -22,7 +22,7 @@ const CheckoutSuccess: React.FC = () => {
 
       try {
         const token = localStorage.getItem('cc_access_token');
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://api.convocarry.ai/api/v1';
         
         const res = await fetch(`${API_URL}/billing/plan`, {
           headers: { Authorization: `Bearer ${token}` }

@@ -1,4 +1,5 @@
-import { db, LocalCarryCard, LocalCarryCardVersion, SyncStatus } from './db';
+import { db, SyncStatus } from './db';
+export type { LocalCarryCard, LocalCarryCardVersion, SyncStatus } from './db';
 import { ConversationNode, SupportedPlatform } from '@convocarry/shared-types';
 
 /** Generates a simple unique ID for local-first creation */

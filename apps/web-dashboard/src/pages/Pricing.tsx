@@ -67,7 +67,7 @@ const Pricing: React.FC = () => {
               <li>Admin controls</li>
               <li>Priority support</li>
             </ul>
-            <a href="mailto:support@convocarry.ai" className="btn btn-secondary" style={{ width: '100%', marginTop: 'auto' }}>Contact Sales</a>
+            <a href="mailto:waseefullah675@gmail.com" className="btn btn-secondary" style={{ width: '100%', marginTop: 'auto' }}>Contact Sales</a>
           </div>
         </div>
       </div>

@@ -48,7 +48,7 @@ export async function trackActivation(
       ...(options?.errorCode !== undefined && { errorCode: options.errorCode }),
     };
 
-    const API_URL = 'http://localhost:3001/api/v1'; // TODO: use env
+    const API_URL = 'https://api.convocarry.ai/api/v1'; // TODO: use env
     
     await fetch(`${API_URL}/events`, {
       method: 'POST',

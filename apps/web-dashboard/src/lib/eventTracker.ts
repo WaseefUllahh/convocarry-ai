@@ -45,7 +45,6 @@ export type ActivationEventName =
   | 'first_mcp_key_created'
   | 'upgrade_modal_opened'
   | 'checkout_started'
-  | 'checkout_completed'
   | 'subscription_canceled'
   | 'adapter_error_seen'
   | 'feedback_submitted';

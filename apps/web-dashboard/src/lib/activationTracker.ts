@@ -74,7 +74,7 @@ export async function trackActivation(
       ...(options?.errorCode !== undefined && { errorCode: options.errorCode }),
     };
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+    const API_URL = import.meta.env.VITE_API_URL || 'https://api.convocarry.ai/api/v1';
     
     await fetch(`${API_URL}/events`, {
       method: 'POST',

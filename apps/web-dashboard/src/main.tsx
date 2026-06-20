@@ -23,6 +23,7 @@ import InjectionShot from './pages/screenshots/InjectionShot';
 import HandoffShot from './pages/screenshots/HandoffShot';
 import SyncMcpShot from './pages/screenshots/SyncMcpShot';
 import PrivacyBackupShot from './pages/screenshots/PrivacyBackupShot';
+import CopyFallbackShot from './pages/screenshots/CopyFallbackShot';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -49,6 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="handoff" element={<HandoffShot />} />
               <Route path="sync-mcp" element={<SyncMcpShot />} />
               <Route path="privacy-backup" element={<PrivacyBackupShot />} />
+              <Route path="copy-fallback" element={<CopyFallbackShot />} />
             </Route>
           </Routes>
         </BrowserRouter>

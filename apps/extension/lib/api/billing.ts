@@ -1,6 +1,6 @@
 import { syncEngine } from '../storage/sync';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.convocarry.ai/api/v1';
 
 export const billingApi = {
   async getPlan() {

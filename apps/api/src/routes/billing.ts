@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { env } from '../config/env';
 
 export default async function (server: FastifyInstance) {
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24.acacia' });
 
   // GET /billing/plan
   server.get('/plan', { preValidation: [server.requireUser] }, async (request, reply) => {

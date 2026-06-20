@@ -53,7 +53,7 @@ const Home: React.FC = () => {
               <p>Save structured snapshots of your conversations locally, ready to be deployed into any supported AI UI.</p>
             </div>
             <div className="card">
-              <h4>Smart Injection</h4>
+              <h4>Structured Injection</h4>
               <p>Inject a concise structured summary or execute a Full Continuation directly into the chat box.</p>
             </div>
             <div className="card">

@@ -7,17 +7,19 @@ export default defineConfig({
     description: 'Carry AI chat context across tools and accounts.',
     version: '0.1.0',
     manifest_version: 3,
-    permissions: ['activeTab', 'scripting', 'storage', 'identity', 'downloads'],
+    permissions: ['activeTab', 'scripting', 'storage'],
     action: {
       default_popup: 'popup.html',
-    },
-    // Placeholder for OAuth2
-    oauth2: {
-      client_id: 'PLACEHOLDER_CLIENT_ID.apps.googleusercontent.com',
-      scopes: ['openid', 'email', 'profile'],
+      default_icon: {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
     },
     icons: {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
