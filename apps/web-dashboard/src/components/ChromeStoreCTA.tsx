@@ -13,7 +13,7 @@ export const ChromeStoreCTA: React.FC<ChromeStoreCTAProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const storeUrl = import.meta.env.VITE_CHROME_STORE_URL;
-  const isPlaceholder = !storeUrl || storeUrl === '#' || storeUrl.includes('placeholder');
+  const isPlaceholder = !storeUrl || ['#', 'LOCAL_INSTALL', 'COMING_SOON'].includes(storeUrl) || storeUrl.includes('placeholder');
 
   const handleClick = (e: React.MouseEvent) => {
     if (isPlaceholder) {

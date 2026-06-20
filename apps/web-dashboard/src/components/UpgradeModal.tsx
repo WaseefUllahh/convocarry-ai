@@ -300,7 +300,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, trigger })
 
         {/* CTAs — secondary is always rendered (no dark patterns) */}
         <div style={styles.actions}>
-          {import.meta.env.MODE === 'production' ? (
+          {(import.meta.env.MODE === 'production' || !import.meta.env.VITE_API_URL || import.meta.env.VITE_API_URL === 'DISABLED') ? (
             <div style={{ ...styles.primaryCta, opacity: 0.6, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)', color: '#a1a1aa' }}>
               Pro upgrades are not enabled in this beta yet.
             </div>

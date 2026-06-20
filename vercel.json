@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm --filter @convocarry/web-dashboard build",
+  "outputDirectory": "apps/web-dashboard/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

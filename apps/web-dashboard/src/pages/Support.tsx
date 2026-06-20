@@ -75,47 +75,53 @@ const Support: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Name (Optional)</label>
-              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          {(!import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL === 'DISABLED') ? (
+            <div style={{ padding: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              In-app support requests are disabled in this beta. Please email <a href="mailto:support@convocarry.ai">support@convocarry.ai</a>.
             </div>
-            
-            <div className="form-group">
-              <label>Email *</label>
-              <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Name (Optional)</label>
+                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              </div>
+              
+              <div className="form-group">
+                <label>Email *</label>
+                <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              </div>
 
-            <div className="form-group">
-              <label>Category</label>
-              <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                <option value="bug">Report a Bug</option>
-                <option value="adapter_issue">Adapter Issue (Capture/Inject Failed)</option>
-                <option value="billing">Billing Inquiry</option>
-                <option value="account_handoff">Account Handoff</option>
-                <option value="mcp">MCP Access</option>
-                <option value="feature_request">Feature Request</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+              <div className="form-group">
+                <label>Category</label>
+                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                  <option value="bug">Report a Bug</option>
+                  <option value="adapter_issue">Adapter Issue (Capture/Inject Failed)</option>
+                  <option value="billing">Billing Inquiry</option>
+                  <option value="account_handoff">Account Handoff</option>
+                  <option value="mcp">MCP Access</option>
+                  <option value="feature_request">Feature Request</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>Message *</label>
-              <textarea rows={5} required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})}></textarea>
-            </div>
+              <div className="form-group">
+                <label>Message *</label>
+                <textarea rows={5} required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})}></textarea>
+              </div>
 
-            <div className="form-group">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 400 }}>
-                <input type="checkbox" checked={formData.diagnosticsOptIn} onChange={e => setFormData({...formData, diagnosticsOptIn: e.target.checked})} style={{ width: 'auto' }} />
-                Include anonymous technical diagnostics (Browser/Extension version)
-              </label>
-              <p style={{ fontSize: '0.8rem', marginLeft: '24px', marginTop: '4px' }}>We never automatically include Carry Card content in support requests.</p>
-            </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 400 }}>
+                  <input type="checkbox" checked={formData.diagnosticsOptIn} onChange={e => setFormData({...formData, diagnosticsOptIn: e.target.checked})} style={{ width: 'auto' }} />
+                  Include anonymous technical diagnostics (Browser/Extension version)
+                </label>
+                <p style={{ fontSize: '0.8rem', marginLeft: '24px', marginTop: '4px' }}>We never automatically include Carry Card content in support requests.</p>
+              </div>
 
-            <button type="submit" className="btn btn-primary" disabled={status === 'loading'} style={{ width: '100%', marginTop: '16px' }}>
-              {status === 'loading' ? 'Sending...' : 'Submit Support Request'}
-            </button>
-          </form>
+              <button type="submit" className="btn btn-primary" disabled={status === 'loading'} style={{ width: '100%', marginTop: '16px' }}>
+                {status === 'loading' ? 'Sending...' : 'Submit Support Request'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </>

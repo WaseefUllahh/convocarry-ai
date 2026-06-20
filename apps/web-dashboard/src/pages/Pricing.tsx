@@ -47,7 +47,13 @@ const Pricing: React.FC = () => {
               <li>MCP personal API access</li>
               <li>Priority adapter fixes</li>
             </ul>
-            <a href={import.meta.env.VITE_CHROME_STORE_URL || '#'} className="btn btn-primary" style={{ width: '100%', marginTop: 'auto' }}>Get Pro</a>
+            {(!import.meta.env.VITE_API_URL || import.meta.env.VITE_API_URL === 'DISABLED' || import.meta.env.MODE === 'production') ? (
+              <div style={{ width: '100%', marginTop: 'auto', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Pro upgrades are not enabled in this beta yet.
+              </div>
+            ) : (
+              <ChromeStoreCTA className="btn btn-primary" style={{ width: '100%', marginTop: 'auto' }}>Get Pro</ChromeStoreCTA>
+            )}
           </div>
 
           <div className="card pricing-card">

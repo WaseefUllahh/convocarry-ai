@@ -20,7 +20,11 @@ const Home: React.FC = () => {
             <ChromeStoreCTA className="btn btn-primary">
               Add to Chrome
             </ChromeStoreCTA>
-            <a href={import.meta.env.VITE_DEMO_VIDEO_URL || '#'} className="btn btn-secondary">Watch demo</a>
+            {(!import.meta.env.VITE_DEMO_VIDEO_URL || ['#', 'COMING_SOON'].includes(import.meta.env.VITE_DEMO_VIDEO_URL)) ? (
+              <span className="btn btn-secondary" style={{ opacity: 0.5, cursor: 'not-allowed' }}>Demo coming soon</span>
+            ) : (
+              <a href={import.meta.env.VITE_DEMO_VIDEO_URL} className="btn btn-secondary" target="_blank" rel="noopener noreferrer">Watch demo</a>
+            )}
           </div>
         </section>
 
