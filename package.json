@@ -1,0 +1,31 @@
+{
+  "name": "convocarry-ai",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ConvoCarry AI — Capture AI chat context, save as Carry Cards, inject anywhere.",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:extension": "pnpm --filter @convocarry/extension dev",
+    "dev:api": "pnpm --filter @convocarry/api dev",
+    "dev:web": "pnpm --filter @convocarry/web-dashboard dev",
+    "dev:mcp": "pnpm --filter @convocarry/mcp-server dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "clean": "pnpm -r run clean",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0"
+  }
+}

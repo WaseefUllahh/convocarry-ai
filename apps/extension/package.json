@@ -1,0 +1,35 @@
+{
+  "name": "@convocarry/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ConvoCarry AI Chrome Extension — capture and inject AI chat context.",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf .output dist .wxt"
+  },
+  "dependencies": {
+    "@convocarry/shared-types": "workspace:*",
+    "@convocarry/adapters": "workspace:*",
+    "@convocarry/security": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "dexie": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/chrome": "^0.0.287",
+    "@wxt-dev/module-react": "^1.1.0",
+    "wxt": "^0.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "rimraf": "^6.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./",
+    "types": ["chrome"]
+  },
+  "include": ["entrypoints/**/*", "lib/**/*", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", ".output", ".wxt"]
+}

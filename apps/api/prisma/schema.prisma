@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  displayName    String?
+  avatarUrl      String?
+  authProvider   String    @default("supabase")
+  authProviderId String    @unique
+
+  subscription   Subscription?
+  carryCards     CarryCard[]
+  teamMembers    TeamMember[]
+  apiKeys        ApiKey[]
+  shares         CarryCardShare[] @relation("SharedByUser")
+  claims         CarryCardClaim[]
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String?   @unique
+  user                  User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  teamId                String?   @unique
+  team                  Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String?
+  plan                  Plan      @default(FREE)
+  status                SubStatus @default(ACTIVE)
+
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean   @default(false)
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("subscriptions")
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  INCOMPLETE
+  PAUSED
+  INCOMPLETE_EXPIRED
+  UNPAID
+}
+
+model Team {
+  id         String       @id @default(cuid())
+  name       String
+  ownerId    String
+
+  members      TeamMember[]
+  folders      TeamFolder[]
+  subscription Subscription?
+
+  createdAt    DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     TeamRole @default(MEMBER)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model TeamFolder {
+  id          String   @id @default(cuid())
+  name        String
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  carryCards  CarryCard[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("team_folders")
+}
+
+model CarryCard {
+  id               String   @id @default(cuid())
+  ownerId          String
+  owner            User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  title            String
+  description      String?
+  tags             String[]
+
+  teamFolderId     String?
+  teamFolder       TeamFolder? @relation(fields: [teamFolderId], references: [id], onDelete: SetNull)
+
+  originCarryCardId String?
+  currentVersionId String?  @unique
+  currentVersion   CarryCardVersion? @relation("CardCurrentVersion", fields: [currentVersionId], references: [id])
+  versions         CarryCardVersion[] @relation("CardVersions")
+  claims           CarryCardClaim[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  deletedAt        DateTime?
+  purgeAfter       DateTime?
+
+  @@index([ownerId])
+  @@index([teamFolderId])
+  @@map("carry_cards")
+}
+
+model DeletedCarryCard {
+  id          String   @id
+  ownerId     String?
+  teamId      String?
+  deletedAt   DateTime
+  purgeAfter  DateTime
+
+  @@map("deleted_carry_cards")
+}
+
+model CarryCardVersion {
+  id                 String   @id @default(cuid())
+  carryCardId        String
+  carryCard          CarryCard @relation("CardVersions", fields: [carryCardId], references: [id], onDelete: Cascade)
+  
+  parentId           String?
+  parent             CarryCardVersion?  @relation("VersionBranching", fields: [parentId], references: [id], onDelete: SetNull)
+  children           CarryCardVersion[] @relation("VersionBranching")
+
+  contextBody        Json
+  rawSnapshot        Json?
+  sourceAccountLabel String?
+  platform           String
+  originVersionId    String?
+
+  attachments        Attachment[]
+
+  shares             CarryCardShare[]
+
+  createdAt          DateTime @default(now())
+
+  currentForCard     CarryCard? @relation("CardCurrentVersion")
+
+  @@index([carryCardId])
+  @@map("carry_card_versions")
+}
+
+model Attachment {
+  id                 String   @id @default(cuid())
+  versionId          String
+  version            CarryCardVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  
+  filename           String
+  contentType        String
+  sizeBytes          Int
+  storageUrl         String
+
+  createdAt          DateTime @default(now())
+
+  @@index([versionId])
+  @@map("attachments")
+}
+
+model CarryCardShare {
+  id                 String   @id @default(cuid())
+  carryCardVersionId String
+  version            CarryCardVersion @relation(fields: [carryCardVersionId], references: [id], onDelete: Cascade)
+
+  createdById        String
+  createdBy          User     @relation("SharedByUser", fields: [createdById], references: [id], onDelete: Cascade)
+
+  token              String   @unique
+  shortCode          String   @unique
+  targetEmail        String?
+  
+  expiresAt          DateTime?
+  maxClaims          Int?
+  claimCount         Int      @default(0)
+
+  createdAt          DateTime @default(now())
+  revokedAt          DateTime?
+  claimedAt          DateTime?
+  lastClaimedById    String?
+
+  claims             CarryCardClaim[]
+
+  @@index([carryCardVersionId])
+  @@index([createdById])
+  @@map("carry_card_shares")
+}
+
+model CarryCardClaim {
+  id                 String   @id @default(cuid())
+  shareId            String
+  share              CarryCardShare @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  
+  claimedById        String
+  claimedBy          User     @relation(fields: [claimedById], references: [id], onDelete: Cascade)
+  
+  claimedCarryCardId String
+  claimedCarryCard   CarryCard @relation(fields: [claimedCarryCardId], references: [id], onDelete: Cascade)
+
+  claimedAt          DateTime @default(now())
+
+  @@index([shareId])
+  @@index([claimedById])
+  @@map("carry_card_claims")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  teamId      String?
+  label       String
+  hashedKey   String   @unique
+  scopes      String[]
+
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([teamId])
+  @@map("api_keys")
+}
+
+model UsageEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  eventType   String
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId, eventType])
+  @@map("usage_events")
+}
+
+model ProcessedWebhookEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+
+  @@map("processed_webhook_events")
+}
