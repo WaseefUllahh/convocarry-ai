@@ -4,7 +4,10 @@ import jwt from 'jsonwebtoken';
 import { build } from '../src/index';
 import type { FastifyInstance } from 'fastify';
 
-describe('Real PostgreSQL multi-user authorization', () => {
+// Skip database integration tests in routine local unit-test runs.
+// The CI integration job sets NODE_ENV=test and a dedicated convocarry_test database.
+const hasIsolatedDb = process.env.NODE_ENV === 'test' && process.env.DATABASE_URL?.includes('convocarry_test');
+(hasIsolatedDb ? describe : describe.skip)('Real PostgreSQL multi-user authorization', () => {
   let app: FastifyInstance;
   let alice: { id: string; authProviderId: string };
   let bob: { id: string; authProviderId: string };
