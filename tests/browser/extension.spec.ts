@@ -81,6 +81,7 @@ test('local capture survives reopening and Full Continuation inserts literal cod
   expect(inserted).toContain('[USER]\nBuild a local Python API.');
   expect(inserted).not.toContain('[CARRY CARD SUMMARY]');
   expect(await destination.locator('[contenteditable] b').count()).toBe(0);
+  await expect.poll(async () => worker.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('cc_milestone_first_full_continuation_injected')).cc_milestone_first_full_continuation_injected)).toBe(true);
   expect(errors).toEqual([]);
 });
 
@@ -106,6 +107,5 @@ test('account mismatch confirmation preserves the selected destination and mode'
   await expect(destination.locator('textarea')).toHaveValue('');
   await page.getByRole('button', { name: 'Yes, Inject' }).click();
   await expect(destination.locator('textarea')).toHaveValue(/Next, add retries\./);
-  const data = await worker.evaluate(async () => (globalThis as any).chrome.storage.local.get('cc_milestone_first_full_continuation_injected'));
-  expect(data.cc_milestone_first_full_continuation_injected).toBe(true);
+  await expect.poll(async () => worker.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('cc_milestone_first_full_continuation_injected')).cc_milestone_first_full_continuation_injected)).toBe(true);
 });

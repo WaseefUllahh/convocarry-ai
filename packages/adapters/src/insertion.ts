@@ -31,6 +31,9 @@ export function insertConversationText(
     if (setter) setter.call(textarea, text);
     else textarea.value = text;
   } else {
+    // With normal HTML whitespace, Chromium's native editing command substitutes
+    // nonbreaking spaces for indentation. Keep code whitespace literal instead.
+    target.style.whiteSpace = 'pre-wrap';
     const range = document.createRange();
     range.selectNodeContents(target);
     const selection = window.getSelection();
