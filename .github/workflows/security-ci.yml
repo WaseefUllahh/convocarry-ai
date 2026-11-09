@@ -48,3 +48,45 @@ jobs:
         run: pnpm typecheck
       - name: Build workspace
         run: pnpm build
+
+  postgres-isolation:
+    name: Real PostgreSQL user-isolation tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: convocarry_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/convocarry_test?schema=public
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: local-test-only-not-production
+      JWT_SECRET: integration-test-jwt-secret-32-chars-at-minimum
+      CRON_SECRET: integration-test-cron-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.18.3 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma Client
+        run: pnpm --filter @convocarry/api exec prisma generate
+      - name: Initialize isolated test database
+        run: pnpm --filter @convocarry/api exec prisma db push
+      - name: Run multi-user PostgreSQL security tests
+        run: pnpm --filter @convocarry/api exec vitest run __tests__/api-isolation.integration.test.ts
