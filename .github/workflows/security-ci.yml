@@ -1,0 +1,48 @@
+name: Security and build checks
+
+on:
+  push:
+    branches:
+      - fix/security-card-access-regressions
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-tests:
+    name: API authorization regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.18.3 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run security unit and route tests
+        run: pnpm --filter @convocarry/api exec vitest run __tests__/card-access.test.ts __tests__/security-routes.test.ts
+
+  monorepo-build:
+    name: Typecheck and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.18.3 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check TypeScript
+        run: pnpm typecheck
+      - name: Build workspace
+        run: pnpm build
