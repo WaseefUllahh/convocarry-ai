@@ -41,7 +41,12 @@ export function insertConversationText(
     selection?.addRange(range);
     let inserted = false;
     try { inserted = document.execCommand('insertText', false, text); } catch { /* Use a text-only fallback. */ }
-    if (!inserted) target.textContent = text;
+    const rendered = target.innerText || target.textContent || '';
+    // Native editing can add block boundaries/placeholder line breaks even when
+    // it returns true. Fall back to one literal text node if the result changed.
+    if (!inserted || rendered.replace(/\r\n/g, '\n') !== text.replace(/\r\n/g, '\n')) {
+      target.textContent = text;
+    }
   }
   target.dispatchEvent(new Event('input', { bubbles: true }));
   target.dispatchEvent(new Event('change', { bubbles: true }));

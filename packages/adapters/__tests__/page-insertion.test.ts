@@ -19,6 +19,20 @@ describe('Verified insertion', () => {
     expect(insertConversationText('context', 'chatgpt', 'https://chatgpt.com/c/old').ok).toBe(false);
     expect(document.querySelector('textarea')!.value).toBe('');
   });
+  it('restores exact code when native editing reports success but changes whitespace', () => {
+    document.body.innerHTML = '<div contenteditable="true"></div>';
+    const target = document.querySelector<HTMLElement>('[contenteditable]')!;
+    const text = '```python\nif count < 3:\n    print("literal")\n```';
+    const previous = document.execCommand;
+    document.execCommand = () => {
+      target.textContent = text.replace('    ', '\u00a0   ') + '\n';
+      return true;
+    };
+    try {
+      expect(insertConversationText(text, 'claude')).toEqual({ ok: true });
+      expect(target.textContent).toBe(text);
+    } finally { document.execCommand = previous; }
+  });
   it('does not claim success for unsupported pages or a disabled composer', () => {
     expect(insertConversationText('context', 'unsupported').ok).toBe(false);
     document.querySelector('textarea')!.disabled = true;
