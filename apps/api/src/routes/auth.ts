@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env';
 
 const exchangeSchema = z.object({
@@ -55,7 +55,7 @@ export default async function (server: FastifyInstance) {
       const sessionToken = jwt.sign(
         { sub: user.authProviderId, email: user.email },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRES_IN }
+        { expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'] }
       );
 
       return reply.code(200).send({
@@ -99,7 +99,7 @@ export default async function (server: FastifyInstance) {
       const sessionToken = jwt.sign(
         { sub: user.authProviderId, email: user.email },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRES_IN }
+        { expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'] }
       );
 
       return reply.code(200).send({
