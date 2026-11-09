@@ -96,6 +96,13 @@ export default async function (server: FastifyInstance) {
     const existing = await server.prisma.carryCard.findUnique({ where: { id } });
     if (!existing || existing.ownerId !== request.user.id) return reply.code(403).send({ error: 'Forbidden' });
 
+    if (parentId) {
+      const parent = await server.prisma.carryCardVersion.findUnique({ where: { id: parentId } });
+      if (!versionBelongsToCard(parent, id)) {
+        return reply.code(400).send({ error: 'Bad Request', message: 'Parent version does not belong to this card' });
+      }
+    }
+
     const version = await server.prisma.carryCardVersion.create({
       data: {
         carryCardId: id,
