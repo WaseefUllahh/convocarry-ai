@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { z } from 'zod';
+import { canAccessCloudCard, versionBelongsToCard, hasMcpScope } from '../services/card-access';
 
 export default async function (server: FastifyInstance) {
   // We use a Map to keep track of active transports per session.
@@ -18,7 +19,8 @@ export default async function (server: FastifyInstance) {
     const user = request.user;
     const apiKey = request.apiKey;
 
-    const enforceScope = async (targetTeamId?: string) => {
+    const enforceScope = async (targetTeamId?: string, requiredScope: 'mcp:read' | 'mcp:write' = 'mcp:read') => {
+      if (!hasMcpScope(apiKey.scopes, requiredScope)) throw new Error(`API key requires ${requiredScope} scope`);
       const plan = user.getEffectivePlan(targetTeamId);
       if (plan === 'FREE') throw new Error('MCP requires PRO or TEAM plan');
       if (apiKey.teamId && apiKey.teamId !== targetTeamId) {
@@ -89,13 +91,15 @@ export default async function (server: FastifyInstance) {
         where: { id: args.carryCardId },
         include: { teamFolder: true }
       });
-      if (!card || card.deletedAt) throw new Error('Card not found');
+      if (!card || card.deletedAt || !canAccessCloudCard(user, card)) throw new Error('Card not found');
       await enforceScope(card.teamFolder?.teamId);
 
+      const versionId = args.versionId || card.currentVersionId;
+      if (!versionId) throw new Error('Version not found');
       const version = await server.prisma.carryCardVersion.findUnique({
-        where: { id: args.versionId || card.currentVersionId! }
+        where: { id: versionId }
       });
-      if (!version) throw new Error('Version not found');
+      if (!versionBelongsToCard(version, card.id)) throw new Error('Version not found');
 
       await server.prisma.usageEvent.create({
         data: { userId: user.id, eventType: 'mcp_get_carry_card', metadata: { apiKeyId: apiKey.id, cardId: card.id } }
@@ -171,9 +175,12 @@ export default async function (server: FastifyInstance) {
       tags: z.array(z.string()).optional(),
       teamId: z.string().optional()
     }, async (args) => {
-      await enforceScope(args.teamId);
+      await enforceScope(args.teamId, 'mcp:write');
+      if (args.teamId) {
+        throw new Error('Creating team cards through MCP requires a configured team-folder mapping.');
+      }
 
-      const teamFolderId = null; // Mock resolution logic for MVP
+      const teamFolderId = null; // Personal card only; team mapping not yet implemented
 
       const card = await server.prisma.carryCard.create({
         data: {
@@ -216,15 +223,21 @@ export default async function (server: FastifyInstance) {
         where: { id: args.carryCardId },
         include: { teamFolder: true }
       });
-      if (!card || card.deletedAt) throw new Error('Card not found');
-      await enforceScope(card.teamFolder?.teamId);
+      if (!card || card.deletedAt || !canAccessCloudCard(user, card)) throw new Error('Card not found');
+      await enforceScope(card.teamFolder?.teamId, 'mcp:write');
+
+      const parentId = args.parentVersionId || card.currentVersionId;
+      if (parentId) {
+        const parent = await server.prisma.carryCardVersion.findUnique({ where: { id: parentId } });
+        if (!versionBelongsToCard(parent, card.id)) throw new Error('Parent version does not belong to this card');
+      }
 
       const version = await server.prisma.carryCardVersion.create({
         data: {
           carryCardId: card.id,
           contextBody: args.contextBody,
           platform: 'mcp',
-          parentId: args.parentVersionId || card.currentVersionId
+          parentId
         }
       });
 
