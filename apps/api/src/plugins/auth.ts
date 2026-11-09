@@ -153,6 +153,9 @@ export default fp(async (server) => {
     if (apiKey.revokedAt) {
       return reply.code(401).send({ error: 'Unauthorized', message: 'API Key revoked' });
     }
+    if (apiKey.expiresAt && apiKey.expiresAt <= new Date()) {
+      return reply.code(401).send({ error: 'Unauthorized', message: 'API Key expired' });
+    }
 
     // Attach user
     const dbUser = apiKey.user;
