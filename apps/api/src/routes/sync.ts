@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { canAccessCloudCard, versionBelongsToCard } from '../services/card-access';
 
 export default async function (server: FastifyInstance) {
   // POST /sync/push
@@ -91,7 +92,28 @@ export default async function (server: FastifyInstance) {
     // 2. Process Versions (Append-only, Idempotent)
     for (const clientVersion of versions) {
       try {
+        const targetCard = await server.prisma.carryCard.findUnique({
+          where: { id: clientVersion.carryCardId },
+          include: { teamFolder: true }
+        });
+        if (!targetCard || !canAccessCloudCard(request.user, targetCard)) {
+          results.errors.push(`Version ${clientVersion.id}: Forbidden`);
+          continue;
+        }
+
+        if (clientVersion.parentId) {
+          const parent = await server.prisma.carryCardVersion.findUnique({ where: { id: clientVersion.parentId } });
+          if (!versionBelongsToCard(parent, targetCard.id)) {
+            results.errors.push(`Version ${clientVersion.id}: Parent version belongs to another card`);
+            continue;
+          }
+        }
+
         const existing = await server.prisma.carryCardVersion.findUnique({ where: { id: clientVersion.id } });
+        if (existing && !versionBelongsToCard(existing, targetCard.id)) {
+          results.errors.push(`Version ${clientVersion.id}: ID collision`);
+          continue;
+        }
         if (!existing) {
           await server.prisma.carryCardVersion.create({
             data: {
