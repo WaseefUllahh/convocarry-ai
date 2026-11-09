@@ -99,7 +99,7 @@ export default async function (server: FastifyInstance) {
       const version = await server.prisma.carryCardVersion.findUnique({
         where: { id: versionId }
       });
-      if (!versionBelongsToCard(version, card.id)) throw new Error('Version not found');
+      if (!version || !versionBelongsToCard(version, card.id)) throw new Error('Version not found');
 
       await server.prisma.usageEvent.create({
         data: { userId: user.id, eventType: 'mcp_get_carry_card', metadata: { apiKeyId: apiKey.id, cardId: card.id } }
