@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { canAccessCloudCard, versionBelongsToCard } from '../services/card-access';
 
 export default async function (server: FastifyInstance) {
   // POST /sync/push
@@ -11,6 +12,8 @@ export default async function (server: FastifyInstance) {
     }
 
     const results = { cardsUpdated: 0, versionsAdded: 0, errors: [] as string[] };
+    // New versions might arrive later in the same request, so bind pointers last.
+    const pendingVersionPointers: Array<{ cardId: string; versionId: string }> = [];
 
     // 1. Process Cards (Last-write-wins & Tombstones)
     for (const clientCard of cards) {
@@ -59,12 +62,14 @@ export default async function (server: FastifyInstance) {
                 title: clientCard.title,
                 description: clientCard.description,
                 tags: clientCard.tags,
-                currentVersionId: clientCard.currentVersionId,
                 deletedAt: clientCard.deletedAt ? new Date(clientCard.deletedAt) : null,
                 purgeAfter: clientCard.purgeAfter ? new Date(clientCard.purgeAfter) : null,
                 updatedAt: new Date() // Force server timestamp
               }
             });
+            if (clientCard.currentVersionId) {
+              pendingVersionPointers.push({ cardId: clientCard.id, versionId: clientCard.currentVersionId });
+            }
             results.cardsUpdated++;
           }
         } else {
@@ -78,9 +83,11 @@ export default async function (server: FastifyInstance) {
               title: clientCard.title,
               description: clientCard.description,
               tags: clientCard.tags || [],
-              currentVersionId: clientCard.currentVersionId,
             }
           });
+          if (clientCard.currentVersionId) {
+            pendingVersionPointers.push({ cardId: clientCard.id, versionId: clientCard.currentVersionId });
+          }
           results.cardsUpdated++;
         }
       } catch (err: any) {
@@ -91,7 +98,28 @@ export default async function (server: FastifyInstance) {
     // 2. Process Versions (Append-only, Idempotent)
     for (const clientVersion of versions) {
       try {
+        const targetCard = await server.prisma.carryCard.findUnique({
+          where: { id: clientVersion.carryCardId },
+          include: { teamFolder: true }
+        });
+        if (!targetCard || targetCard.deletedAt || !canAccessCloudCard(request.user, targetCard)) {
+          results.errors.push(`Version ${clientVersion.id}: Forbidden`);
+          continue;
+        }
+
+        if (clientVersion.parentId) {
+          const parent = await server.prisma.carryCardVersion.findUnique({ where: { id: clientVersion.parentId } });
+          if (!versionBelongsToCard(parent, targetCard.id)) {
+            results.errors.push(`Version ${clientVersion.id}: Parent version belongs to another card`);
+            continue;
+          }
+        }
+
         const existing = await server.prisma.carryCardVersion.findUnique({ where: { id: clientVersion.id } });
+        if (existing && !versionBelongsToCard(existing, targetCard.id)) {
+          results.errors.push(`Version ${clientVersion.id}: ID collision`);
+          continue;
+        }
         if (!existing) {
           await server.prisma.carryCardVersion.create({
             data: {
@@ -110,6 +138,27 @@ export default async function (server: FastifyInstance) {
         // If it exists, we strictly ignore it (append-only)
       } catch (err: any) {
         results.errors.push(`Version ${clientVersion.id}: ${err.message}`);
+      }
+    }
+
+    for (const { cardId, versionId } of pendingVersionPointers) {
+      try {
+        const card = await server.prisma.carryCard.findUnique({
+          where: { id: cardId },
+          include: { teamFolder: true }
+        });
+        if (!card || !canAccessCloudCard(request.user, card)) {
+          results.errors.push(`Card ${cardId}: Forbidden active version update`);
+          continue;
+        }
+        const version = await server.prisma.carryCardVersion.findUnique({ where: { id: versionId } });
+        if (!versionBelongsToCard(version, cardId)) {
+          results.errors.push(`Card ${cardId}: Active version does not belong to this card`);
+          continue;
+        }
+        await server.prisma.carryCard.update({ where: { id: cardId }, data: { currentVersionId: versionId } });
+      } catch (err: any) {
+        results.errors.push(`Card ${cardId}: ${err.message}`);
       }
     }
 

@@ -29,13 +29,13 @@ export function generateStructuredSummary(
 Captured from: ${sourceStr}
 
 ## Main Objective
-${firstUserRequest.split('\\n')[0].substring(0, 100)}...
+${firstUserRequest.split('\n')[0].substring(0, 100)}...
 
 ## Key Decisions / Output
 ${decisions}
 
 ## Last User Request
-${lastRequest.split('\\n')[0].substring(0, 100)}...
+${lastRequest.split('\n')[0].substring(0, 100)}...
 
 ## Continuation Instructions
 Please read the above context and wait for my next specific prompt.`;
@@ -73,7 +73,11 @@ export function generateInjectionText(
 
   if (mode === 'full_continuation') {
     // Reconstruct the transcript from the raw snapshot (or contextBody if no raw exists)
-    const transcriptNodes = (rawSnapshot && rawSnapshot.length > 0) ? rawSnapshot : nodes;
+    const candidates = (rawSnapshot && rawSnapshot.length > 0) ? rawSnapshot : nodes;
+    const transcriptNodes = candidates.filter(node => !(node.role === 'system' && node.text.includes('[CARRY CARD SUMMARY]')));
+    if (!transcriptNodes.some(node => node.role === 'user' || node.role === 'assistant')) {
+      throw new Error('This card has no saved transcript. Recapture the chat to use Full Continuation, or choose Summary.');
+    }
     
     let text = `Continuing a previous AI conversation from another account/profile. Here is the conversation so far:\n\n---\n`;
     

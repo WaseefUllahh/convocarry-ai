@@ -21,9 +21,12 @@ const server = Fastify({
 // Global Error Handler
 server.setErrorHandler(function (error, request, reply) {
   this.log.error(error);
-  reply.status(error.statusCode || 500).send({
-    error: error.name || 'Internal Server Error',
-    message: error.message
+  const statusCode = typeof error === 'object' && error && 'statusCode' in error && typeof error.statusCode === 'number'
+    ? error.statusCode : 500;
+  const safeMessage = statusCode >= 500 ? 'Internal Server Error' : (error instanceof Error ? error.message : 'Request failed');
+  reply.status(statusCode).send({
+    error: statusCode >= 500 ? 'Internal Server Error' : (error instanceof Error ? error.name : 'Bad Request'),
+    message: safeMessage
   });
 });
 

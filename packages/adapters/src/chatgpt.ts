@@ -1,5 +1,6 @@
+import { insertConversationText } from './insertion';
 import { SiteAdapter, ConversationNode } from '@convocarry/shared-types';
-import { safeTextFromElement, createConversationNode, sanitizeForInjection } from './helpers';
+import { safeTextFromElement, createConversationNode } from './helpers';
 
 const DEBUG = false;
 
@@ -14,7 +15,10 @@ export const chatgptAdapter: SiteAdapter = {
   platform: 'chatgpt',
   
   matchesUrl(url: string): boolean {
-    return url.includes('chatgpt.com') || url.includes('chat.openai.com');
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'https:' && ['chatgpt.com', 'chat.openai.com'].includes(parsed.hostname);
+    } catch { return false; }
   },
   
   async extractConversation(root: Document | Element = document, url?: string): Promise<ConversationNode[]> {
@@ -60,32 +64,8 @@ export const chatgptAdapter: SiteAdapter = {
   },
 
   async insertText(target: HTMLElement, text: string): Promise<void> {
-    const cleanText = sanitizeForInjection(text);
-    debugLog('Injecting text into composer', target);
-    
-    if (target.tagName.toLowerCase() === 'textarea') {
-      const textarea = target as HTMLTextAreaElement;
-      
-      // React heavily controls the value of textareas. Bypassing the getter/setter ensures it registers.
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
-      
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(textarea, cleanText);
-      } else {
-        textarea.value = cleanText;
-      }
-      
-      // Fire events so React updates its state
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      textarea.dispatchEvent(new Event('change', { bubbles: true }));
-      
-    } else if (target.getAttribute('contenteditable') === 'true') {
-      target.textContent = cleanText;
-      target.dispatchEvent(new Event('input', { bubbles: true }));
-      target.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      throw new Error('Target is neither a textarea nor contenteditable.');
-    }
+    const result = insertConversationText(text, 'chatgpt', undefined, target);
+    if (!result.ok) throw new Error(result.error);
   },
 
   async getActiveAccountLabel(root: Document | Element = document): Promise<string | null> {

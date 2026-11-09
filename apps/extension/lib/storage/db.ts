@@ -28,7 +28,7 @@ export interface LocalCarryCardVersion {
   parentId?: string;
   
   contextBody: ConversationNode[];
-  rawSnapshot?: any;
+  rawSnapshot?: ConversationNode[];
   sourceAccountLabel?: string;
   platform: string;
   
@@ -77,6 +77,8 @@ export class ConvoCarryDatabase extends Dexie {
       settings: 'key',
       usage: 'id, eventType, timestamp'
     });
+    // Add the index used by listCards without deleting existing cards or versions.
+    this.version(3).stores({ carryCards: 'id, title, syncStatus, deletedAt, createdAt, updatedAt' });
   }
 }
 

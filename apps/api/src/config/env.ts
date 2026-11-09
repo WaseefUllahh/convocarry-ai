@@ -12,6 +12,7 @@ const envSchema = z.object({
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional(),
   APP_BASE_URL: z.string().url().default('https://convocarryai.vercel.app'),
   EXTENSION_ID: z.string().optional(), // For CORS
+  GOOGLE_CLIENT_ID: z.string().trim().optional(),
   ENCRYPTION_KEY: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   ENABLE_DEV_LOGIN: z.string().default('false'),
@@ -37,6 +38,14 @@ const envSchema = z.object({
 }, {
   message: "Missing auth provider credentials (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY or FIREBASE vars)",
   path: ['AUTH_PROVIDER'],
+}).superRefine((data, ctx) => {
+  if (data.NODE_ENV !== 'production') return;
+  if (!process.env.JWT_SECRET || data.JWT_SECRET === 'fallback-secret-for-development-only-must-be-32-bytes') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['JWT_SECRET'], message: 'Production requires a unique JWT_SECRET' });
+  }
+  if (!process.env.CRON_SECRET || data.CRON_SECRET === 'fallback-cron-secret-16-bytes') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['CRON_SECRET'], message: 'Production requires a unique CRON_SECRET' });
+  }
 });
 
 export const env = envSchema.parse(process.env);
