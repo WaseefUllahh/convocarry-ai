@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { cardStorage, LocalCarryCard, LocalCarryCardVersion } from '../../lib/storage/cards';
+import { db } from '../../lib/storage/db';
 import { trackActivation } from '../../lib/activationTracker';
 import { syncEngine } from '../../lib/storage/sync';
 import { PlatformBadge, AccountLabelChip, EmptyState, UpgradeBanner, VersionTimeline } from './components';
