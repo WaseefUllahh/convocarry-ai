@@ -118,6 +118,9 @@ export const syncEngine = {
         }
 
         const result = await response.json();
+        if (Array.isArray(result.errors) && result.errors.length > 0) {
+          throw new SyncError(`Server rejected ${result.errors.length} sync item(s): ${String(result.errors[0])}`);
+        }
         totalUpdated += result.cardsUpdated + result.versionsAdded;
 
         // Mark chunk as synced or execute hard delete for soft-deleted cards
