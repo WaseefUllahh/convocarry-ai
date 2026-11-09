@@ -1,4 +1,4 @@
-import { ActivationEventName } from '@convocarry/shared-types/src/events';
+import type { ActivationEventName } from '@convocarry/shared-types';
 
 /**
  * Extension-specific Activation Tracker
