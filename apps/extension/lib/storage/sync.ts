@@ -162,7 +162,7 @@ export const syncEngine = {
     let highestTimestamp = lastSync ? lastSync.getTime() : 0;
 
     while (hasMore) {
-      const response = await fetch(`${API_BASE_URL}/sync/pull`, {
+      const response: Response = await fetch(`${API_BASE_URL}/sync/pull`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ export const syncEngine = {
         throw new SyncError('Failed to pull sync payload');
       }
 
-      const { timestamp, data, nextCursor, hasMore: _hasMore } = await response.json();
+      const { timestamp, data, nextCursor, hasMore: _hasMore }: { timestamp: string; data: { cards?: any[]; versions?: any[] }; nextCursor: string | null; hasMore: boolean } = await response.json();
       hasMore = _hasMore;
       cursor = nextCursor;
 
