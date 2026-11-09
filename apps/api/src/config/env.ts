@@ -12,6 +12,7 @@ const envSchema = z.object({
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional(),
   APP_BASE_URL: z.string().url().default('https://convocarryai.vercel.app'),
   EXTENSION_ID: z.string().optional(), // For CORS
+  GOOGLE_CLIENT_ID: z.string().trim().optional(),
   ENCRYPTION_KEY: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   ENABLE_DEV_LOGIN: z.string().default('false'),

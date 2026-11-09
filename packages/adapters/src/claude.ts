@@ -1,5 +1,6 @@
+import { insertConversationText } from './insertion';
 import { SiteAdapter, ConversationNode } from '@convocarry/shared-types';
-import { safeTextFromElement, createConversationNode, sanitizeForInjection } from './helpers';
+import { safeTextFromElement, createConversationNode } from './helpers';
 
 const DEBUG = false;
 
@@ -14,7 +15,10 @@ export const claudeAdapter: SiteAdapter = {
   platform: 'claude',
   
   matchesUrl(url: string): boolean {
-    return url.includes('claude.ai');
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'https:' && ['claude.ai'].includes(parsed.hostname);
+    } catch { return false; }
   },
   
   async extractConversation(root: Document | Element = document, url?: string): Promise<ConversationNode[]> {
@@ -55,37 +59,8 @@ export const claudeAdapter: SiteAdapter = {
   },
 
   async insertText(target: HTMLElement, text: string): Promise<void> {
-    const cleanText = sanitizeForInjection(text);
-    debugLog('Injecting text into composer', target);
-    
-    if (target.getAttribute('contenteditable') === 'true') {
-      target.focus();
-      
-      let inserted = false;
-      try {
-        inserted = document.execCommand('insertText', false, cleanText);
-      } catch (e) {
-        debugLog('execCommand failed', e);
-      }
-      
-      if (!inserted) {
-        debugLog('Falling back to synthetic paste event');
-        const dataTransfer = new DataTransfer();
-        dataTransfer.setData('text/plain', cleanText);
-        
-        const pasteEvent = new ClipboardEvent('paste', {
-          bubbles: true,
-          cancelable: true,
-          clipboardData: dataTransfer,
-        });
-        
-        target.dispatchEvent(pasteEvent);
-      }
-      
-      target.dispatchEvent(new Event('input', { bubbles: true }));
-    } else {
-      throw new Error('Expected contenteditable target for Claude.');
-    }
+    const result = insertConversationText(text, 'claude', undefined, target);
+    if (!result.ok) throw new Error(result.error);
   },
 
   async getActiveAccountLabel(root: Document | Element = document): Promise<string | null> {

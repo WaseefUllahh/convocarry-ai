@@ -343,28 +343,20 @@ const App: React.FC = () => {
                 <div className="section-box">
                   <h3 className="section-title">Quick Actions</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button className="btn btn-primary" onClick={async () => {
+                    <p>To insert into a chat, open ChatGPT or Claude and use the ConvoCarry toolbar popup.</p>
+                    <button className="btn" onClick={async () => {
                       try {
-                        // Mock injection adapter call
-                        // await injectionAdapter.inject(activeVersion.contextBody);
-                        alert('Injected into active tab!');
-                      } catch (e: any) {
-                        alert(`Injection failed: ${e.message}\n\nYou can still copy the Carry Card manually below.`);
-                      }
-                    }}>Inject into Chat (Auto)</button>
-                    
-                    <button className="btn" onClick={async () => {
-                      const { generateInjectionText } = await import('../../lib/heuristics');
-                      const text = generateInjectionText('summary', activeVersion.contextBody);
-                      navigator.clipboard.writeText(text);
-                      alert('Summary copied to clipboard!');
+                        const { generateInjectionText } = await import('../../lib/heuristics');
+                        await navigator.clipboard.writeText(generateInjectionText('summary', activeVersion.contextBody));
+                        alert('Summary copied to clipboard!');
+                      } catch (error) { alert((error as Error).message); }
                     }}>Copy Summary (Fallback)</button>
-                    
                     <button className="btn" onClick={async () => {
-                      const { generateInjectionText } = await import('../../lib/heuristics');
-                      const text = generateInjectionText('full_continuation', activeVersion.contextBody);
-                      navigator.clipboard.writeText(text);
-                      alert('Full Continuation copied to clipboard!');
+                      try {
+                        const { generateInjectionText } = await import('../../lib/heuristics');
+                        await navigator.clipboard.writeText(generateInjectionText('full_continuation', activeVersion.contextBody, activeVersion.rawSnapshot));
+                        alert('Full Continuation copied to clipboard!');
+                      } catch (error) { alert((error as Error).message); }
                     }}>Copy Full Continuation (Fallback)</button>
 
                     <button className="btn btn-outline" onClick={handleCreateShare}>Generate Handoff Link</button>

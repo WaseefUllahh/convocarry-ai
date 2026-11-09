@@ -26,6 +26,7 @@ export const cardStorage = {
     tags?: string[];
     platform: string;
     contextBody: ConversationNode[];
+    rawSnapshot?: ConversationNode[];
     sourceAccountLabel?: string;
   }): Promise<{ card: LocalCarryCard; version: LocalCarryCardVersion }> {
     
@@ -59,6 +60,7 @@ export const cardStorage = {
       carryCardId: cardId,
       platform: params.platform,
       contextBody: params.contextBody,
+      rawSnapshot: params.rawSnapshot,
       sourceAccountLabel: params.sourceAccountLabel,
       syncStatus: 'local_only',
       createdAt: now,
@@ -153,6 +155,7 @@ export const cardStorage = {
     params: {
       platform: string;
       contextBody: ConversationNode[];
+      rawSnapshot?: ConversationNode[];
       sourceAccountLabel?: string;
       setAsCurrent?: boolean;
     }
@@ -169,6 +172,7 @@ export const cardStorage = {
       parentId: card.currentVersionId,
       platform: params.platform,
       contextBody: params.contextBody,
+      rawSnapshot: params.rawSnapshot,
       sourceAccountLabel: params.sourceAccountLabel,
       syncStatus: 'local_only',
       createdAt: now,

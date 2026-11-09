@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run security unit and route tests
-        run: pnpm --filter @convocarry/api exec vitest run __tests__/card-access.test.ts __tests__/security-routes.test.ts
+        run: pnpm --filter @convocarry/api exec vitest run __tests__/card-access.test.ts __tests__/security-routes.test.ts __tests__/oauth-exchange.test.ts
 
   monorepo-build:
     name: Typecheck and build
@@ -90,3 +90,26 @@ jobs:
         run: pnpm --filter @convocarry/api exec prisma db push
       - name: Run multi-user PostgreSQL security tests
         run: pnpm --filter @convocarry/api exec vitest run __tests__/api-isolation.integration.test.ts
+
+  extension-regressions:
+    name: Extension capture, auth and browser regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.18.3 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run adapter and local storage/session tests
+        run: pnpm --filter @convocarry/adapters --filter @convocarry/extension test
+      - name: Build local extension
+        run: pnpm --filter @convocarry/extension build
+      - name: Install test browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Test capture through insertion in Chromium fixtures
+        run: pnpm test:browser
