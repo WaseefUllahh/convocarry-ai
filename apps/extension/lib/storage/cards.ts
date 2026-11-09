@@ -1,4 +1,4 @@
-import { db, SyncStatus } from './db';
+import { db, type LocalCarryCard, type LocalCarryCardVersion } from './db';
 export type { LocalCarryCard, LocalCarryCardVersion, SyncStatus } from './db';
 import { ConversationNode, SupportedPlatform } from '@convocarry/shared-types';
 
