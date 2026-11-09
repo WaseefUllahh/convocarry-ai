@@ -42,6 +42,8 @@ jobs:
           corepack prepare pnpm@10.18.3 --activate
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Generate Prisma Client
+        run: pnpm --filter @convocarry/api exec prisma generate
       - name: Check TypeScript
         run: pnpm typecheck
       - name: Build workspace
