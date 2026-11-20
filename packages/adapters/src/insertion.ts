@@ -14,7 +14,7 @@ export function insertConversationText(
     return { ok: false, error: 'The destination page changed. Open the extension again and retry.' };
   }
   const target = targetOverride || document.querySelector<HTMLElement>(platform === 'chatgpt'
-    ? '#prompt-textarea, div[contenteditable="true"].ProseMirror'
+    ? '#prompt-textarea, div[contenteditable="true"].ProseMirror, textarea#mobile-composer-prompt'
     : 'div[contenteditable="true"]');
   if (!target) return { ok: false, error: 'Composer not found. Wait for the chat to load and try again.' };
   const textarea = target.tagName.toLowerCase() === 'textarea' ? target as HTMLTextAreaElement : null;

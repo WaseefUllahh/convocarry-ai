@@ -5,6 +5,17 @@ import { getAdapterForUrl } from '../src/registry';
 beforeEach(() => { document.body.innerHTML = '<textarea id="prompt-textarea"></textarea>'; });
 
 describe('Verified insertion', () => {
+  it('inserts into the alternate ChatGPT textarea without submitting', () => {
+    document.body.innerHTML = '<form><textarea id="mobile-composer-prompt"></textarea></form>';
+    const composer = document.querySelector('textarea')!;
+    let submitted = false;
+    composer.form!.addEventListener('submit', () => { submitted = true; });
+    expect(getAdapterForUrl('https://chatgpt.com/').getComposerInput()).toBe(composer);
+    const text = '```python\nif ready:\n    print("test")\n```';
+    expect(insertConversationText(text, 'chatgpt')).toEqual({ ok: true });
+    expect(composer.value).toBe(text);
+    expect(submitted).toBe(false);
+  });
   it('returns failure if the composer is missing', () => {
     document.body.innerHTML = '';
     expect(insertConversationText('context', 'chatgpt')).toMatchObject({ ok: false, error: expect.stringContaining('Composer not found') });

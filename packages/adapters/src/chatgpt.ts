@@ -54,13 +54,9 @@ export const chatgptAdapter: SiteAdapter = {
   },
 
   getComposerInput(root: Document | Element = document): HTMLElement | null {
-    // Attempt textarea first (standard)
-    let composer = root.querySelector('#prompt-textarea') as HTMLElement;
-    if (composer) return composer;
-
-    // Fallback to ProseMirror / contenteditable if textarea is missing
-    composer = root.querySelector('div[contenteditable="true"].ProseMirror') as HTMLElement;
-    return composer || null;
+    return root.querySelector<HTMLElement>(
+      '#prompt-textarea, div[contenteditable="true"].ProseMirror, textarea#mobile-composer-prompt',
+    );
   },
 
   async insertText(target: HTMLElement, text: string): Promise<void> {
