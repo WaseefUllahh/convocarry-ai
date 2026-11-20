@@ -62,7 +62,7 @@ describe('Claude Adapter Advanced Insertion', () => {
     expect(dispatchSpy).toHaveBeenCalled(); // Should have fired 'input' event
   });
 
-  it('falls back to paste event if execCommand fails', async () => {
+  it('falls back to inert text if execCommand fails', async () => {
     const target = claudeAdapter.getComposerInput();
     
     // Mock execCommand to fail
@@ -72,9 +72,8 @@ describe('Claude Adapter Advanced Insertion', () => {
     
     await claudeAdapter.insertText(target!, 'Synthetic Paste Test');
     
-    // Since execCommand failed, it should dispatch a paste event
+    expect(target!.textContent).toBe('Synthetic Paste Test');
     const events = dispatchSpy.mock.calls.map(call => call[0].type);
-    expect(events).toContain('paste');
     expect(events).toContain('input');
   });
 
@@ -82,6 +81,7 @@ describe('Claude Adapter Advanced Insertion', () => {
     const target = claudeAdapter.getComposerInput();
     await claudeAdapter.insertText(target!, '<script>alert(1)</script>');
     
-    expect(document.execCommand).toHaveBeenCalledWith('insertText', false, ''); // Sanitize strips scripts completely
+    expect(target!.textContent).toBe('<script>alert(1)</script>');
+    expect(target!.querySelector('script')).toBeNull();
   });
 });

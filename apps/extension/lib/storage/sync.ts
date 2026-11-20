@@ -1,7 +1,8 @@
 import { db, LocalCarryCard, LocalCarryCardVersion } from './db';
 import { ConversationNode } from '@convocarry/shared-types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.convocarry.ai/api/v1';
+import { API_BASE_URL } from '../api/config';
+import { auth } from '../auth';
 
 export class SyncError extends Error {
   constructor(message: string) {
@@ -12,44 +13,7 @@ export class SyncError extends Error {
 
 export const syncEngine = {
   async getAuthToken(): Promise<string | null> {
-    // 1. Check if we already have a valid ConvoCarry session JWT cached
-    const cached = await db.settings.get('sessionJwt');
-    const cachedExpires = await db.settings.get('sessionJwtExpires');
-    if (cached && cachedExpires && new Date(cachedExpires.value) > new Date()) {
-      return cached.value;
-    }
-
-    // 2. Fetch Google OAuth Token
-    const googleToken = await new Promise<string | null>((resolve) => {
-      chrome.identity.getAuthToken({ interactive: true }, (token) => {
-        resolve(token || null);
-      });
-    });
-
-    if (!googleToken) return null;
-
-    // 3. Exchange for ConvoCarry JWT
-    const response = await fetch(`${API_BASE_URL}/auth/exchange`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: googleToken })
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) chrome.identity.removeCachedAuthToken({ token: googleToken }, () => {});
-      throw new SyncError('Failed to exchange auth token');
-    }
-
-    const data = await response.json();
-    
-    // Cache the JWT
-    await db.settings.put({ key: 'sessionJwt', value: data.token });
-    // Assume 7 day expiry for cache as a buffer
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 6);
-    await db.settings.put({ key: 'sessionJwtExpires', value: expiry.toISOString() });
-
-    return data.token;
+    return (await auth.getSession())?.token || null;
   },
 
   async getLastSyncTimestamp(): Promise<Date | null> {
@@ -63,7 +27,7 @@ export const syncEngine = {
 
   async push(): Promise<number> {
     const token = await this.getAuthToken();
-    if (!token) throw new SyncError('Not authenticated');
+    if (!token) throw new SyncError('Sign in from the extension popup before syncing.');
 
     let totalUpdated = 0;
     const MAX_RETRIES = 10;
@@ -118,6 +82,9 @@ export const syncEngine = {
         }
 
         const result = await response.json();
+        if (Array.isArray(result.errors) && result.errors.length > 0) {
+          throw new SyncError(`Server rejected ${result.errors.length} sync item(s): ${String(result.errors[0])}`);
+        }
         totalUpdated += result.cardsUpdated + result.versionsAdded;
 
         // Mark chunk as synced or execute hard delete for soft-deleted cards
@@ -150,7 +117,7 @@ export const syncEngine = {
 
   async pull(): Promise<number> {
     const token = await this.getAuthToken();
-    if (!token) throw new SyncError('Not authenticated');
+    if (!token) throw new SyncError('Sign in from the extension popup before syncing.');
 
     const lastSync = await this.getLastSyncTimestamp();
     let totalPulled = 0;
@@ -159,7 +126,7 @@ export const syncEngine = {
     let highestTimestamp = lastSync ? lastSync.getTime() : 0;
 
     while (hasMore) {
-      const response = await fetch(`${API_BASE_URL}/sync/pull`, {
+      const response: Response = await fetch(`${API_BASE_URL}/sync/pull`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +144,7 @@ export const syncEngine = {
         throw new SyncError('Failed to pull sync payload');
       }
 
-      const { timestamp, data, nextCursor, hasMore: _hasMore } = await response.json();
+      const { timestamp, data, nextCursor, hasMore: _hasMore }: { timestamp: string; data: { cards?: any[]; versions?: any[] }; nextCursor: string | null; hasMore: boolean } = await response.json();
       hasMore = _hasMore;
       cursor = nextCursor;
 

@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { versionBelongsToCard } from '../services/card-access';
 
 export default async function (server: FastifyInstance) {
   // GET /carry-cards
@@ -11,7 +12,14 @@ export default async function (server: FastifyInstance) {
   // POST /carry-cards
   server.post('/', { preValidation: [server.requireProOrTeam] }, async (request, reply) => {
     const { title, description, tags, teamFolderId, platform, contextBody, sourceAccountLabel } = request.body as any;
-    
+
+    if (teamFolderId) {
+      const folder = await server.prisma.teamFolder.findUnique({ where: { id: teamFolderId } });
+      if (!folder || !request.user.teams.includes(folder.teamId) || request.user.getEffectivePlan(folder.teamId) !== 'TEAM') {
+        return reply.code(403).send({ error: 'Forbidden', message: 'Team folder access denied' });
+      }
+    }
+
     // Single transaction to create card and initial version
     const card = await server.prisma.carryCard.create({
       data: {
@@ -57,6 +65,13 @@ export default async function (server: FastifyInstance) {
     const existing = await server.prisma.carryCard.findUnique({ where: { id } });
     if (!existing || existing.ownerId !== request.user.id) return reply.code(403).send({ error: 'Forbidden' });
 
+    if (currentVersionId != null) {
+      const version = await server.prisma.carryCardVersion.findUnique({ where: { id: currentVersionId } });
+      if (!versionBelongsToCard(version, id)) {
+        return reply.code(400).send({ error: 'Bad Request', message: 'Version does not belong to this card' });
+      }
+    }
+
     return server.prisma.carryCard.update({
       where: { id },
       data: { title, description, tags, currentVersionId }
@@ -80,6 +95,13 @@ export default async function (server: FastifyInstance) {
 
     const existing = await server.prisma.carryCard.findUnique({ where: { id } });
     if (!existing || existing.ownerId !== request.user.id) return reply.code(403).send({ error: 'Forbidden' });
+
+    if (parentId) {
+      const parent = await server.prisma.carryCardVersion.findUnique({ where: { id: parentId } });
+      if (!versionBelongsToCard(parent, id)) {
+        return reply.code(400).send({ error: 'Bad Request', message: 'Parent version does not belong to this card' });
+      }
+    }
 
     const version = await server.prisma.carryCardVersion.create({
       data: {
@@ -107,6 +129,11 @@ export default async function (server: FastifyInstance) {
     
     const existing = await server.prisma.carryCard.findUnique({ where: { id } });
     if (!existing || existing.ownerId !== request.user.id) return reply.code(403).send({ error: 'Forbidden' });
+
+    const version = await server.prisma.carryCardVersion.findUnique({ where: { id: versionId } });
+    if (!versionBelongsToCard(version, id)) {
+      return reply.code(404).send({ error: 'Not Found', message: 'Version not found on this card' });
+    }
 
     await server.prisma.carryCard.update({
       where: { id },

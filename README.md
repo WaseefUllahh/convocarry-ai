@@ -154,13 +154,13 @@ ConvoCarry AI is designed with a **local-first, privacy-respecting architecture*
 |---|---|---|
 | Carry Cards | IndexedDB (local only, never leaves browser) | Local + encrypted cloud sync (PostgreSQL) |
 | User preferences | `chrome.storage.local` | `chrome.storage.local` + cloud backup |
-| Auth tokens | `chrome.storage.local` (encrypted) | `chrome.storage.local` (encrypted) |
+| Auth tokens | No session in local mode | Extension IndexedDB (not application-encrypted) |
 | Conversation content | Never sent to ConvoCarry servers | Encrypted at rest in PostgreSQL |
 
 ### What We Do NOT Do
 
 - ❌ Read or store your AI service credentials (API keys, session tokens)
-- ❌ Send data to third parties (beyond Supabase for auth, Stripe for billing)
+- ❌ Send captured conversations to third parties without an explicit cloud action. Optional sign-in contacts Google through the configured API; billing uses Stripe.
 - ❌ Run persistent content scripts on AI sites
 - ❌ Access any website without explicit user action (click)
 - ❌ Auto-submit messages on your behalf (injection places text in the input — you press Enter)
@@ -235,3 +235,5 @@ ConvoCarry AI is designed for **Chrome Web Store Manifest V3** compliance:
 ## License
 
 Proprietary. All rights reserved.
+
+Extension local mode, OAuth setup, transcript limitations and regression commands are documented in [apps/extension/README.md](apps/extension/README.md).

@@ -1,4 +1,6 @@
-import { ActivationEventName } from '@convocarry/shared-types/src/events';
+import { auth } from './auth';
+import { API_BASE_URL } from './api/config';
+import type { ActivationEventName } from '@convocarry/shared-types';
 
 /**
  * Extension-specific Activation Tracker
@@ -36,25 +38,24 @@ export async function trackActivation(
 
   // 4. Send server event if signed in (via Chrome Identity or synced token)
   try {
-    const { cc_access_token, cc_plan } = await chrome.storage.sync.get(['cc_access_token', 'cc_plan']);
-    if (!cc_access_token) return; // Free user fallback
+    const session = await auth.getSession();
+    if (!session) return;
 
     const payload = {
       event: eventName,
       timestamp: new Date().toISOString(),
-      plan: cc_plan || 'FREE',
+      plan: session.user.plan,
       platform: options?.platform || 'other',
       ...(options?.success !== undefined && { success: options.success }),
       ...(options?.errorCode !== undefined && { errorCode: options.errorCode }),
     };
 
-    const API_URL = 'https://api.convocarry.ai/api/v1'; // TODO: use env
     
-    await fetch(`${API_URL}/events`, {
+    await fetch(`${API_BASE_URL}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cc_access_token}`
+        'Authorization': `Bearer ${session.token}`
       },
       body: JSON.stringify(payload)
     });

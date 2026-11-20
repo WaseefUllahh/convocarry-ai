@@ -31,3 +31,7 @@ coverage/
 # Prisma
 apps/api/prisma/*.db
 apps/api/prisma/migrations/**/migration_lock.toml
+
+# Browser test output
+test-results/
+playwright-report/

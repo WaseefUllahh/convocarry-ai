@@ -37,13 +37,13 @@ describe('Adapter Insertion', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('sanitizes HTML before injection', async () => {
+  it('keeps HTML code as inert text during injection', async () => {
     document.body.innerHTML = document.getElementById('chatgpt-mock')!.outerHTML;
     const target = chatgptAdapter.getComposerInput() as HTMLTextAreaElement;
     
     await chatgptAdapter.insertText(target, '<b>Bold</b> and <script>alert(1)</script>');
     
-    // Should strip tags and scripts, leaving only text content
-    expect(target.value).toBe('Bold and ');
+    expect(target.value).toBe('<b>Bold</b> and <script>alert(1)</script>');
+    expect(document.querySelector('script')).toBeNull();
   });
 });
